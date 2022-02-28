@@ -9,6 +9,7 @@
 #include "bsp_epit.h"
 #include "bsp_uart.h"
 #include "stdio.h"
+#include "bsp_lcd.h"
 static unsigned char led_state = OFF;
 unsigned int a,b;
 int main(void)
@@ -23,27 +24,12 @@ int main(void)
     key_init();
     exti_init();
     epit1_init(0,66000000/100);/*初始化定时器1,1分频66MHz,定时时间为10ms,用于按键消抖*/
+    lcd_init();
     while(1)
     {
-        /*
         led_state = !led_state;
         led_switch(LED0,led_state);
-        delay_ms(100);
-        
-        puts("请输入一个字符:");
-        a = getc();
-        putc(a); //发送输入的字符
-        puts("\r\n");
-
-        puts("您输入的字符为:");
-        putc(a);
-        puts("\r\n");
-        */
-       printf("请输入两个整数，并使用空格隔开：");
-       scanf("%d %d",&a,&b);
-       printf("\r\n%d + %d = %d\r\n",a,b,a+b);
-
-       printf("%d的十六进制是%#x\r\n",a+b,a+b);
+        delay_ms(1000);
     }
     return 0;
 }

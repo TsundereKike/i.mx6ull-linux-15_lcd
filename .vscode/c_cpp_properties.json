@@ -14,6 +14,7 @@
                 "${workspaceFolder}/bsp/exti",
                 "${workspaceFolder}/bsp/epit",
                 "${workspaceFolder}/bsp/uart",
+                "${workspaceFolder}/bsp/lcd",
                 "${workspaceFolder}/imx6u",
                 "${workspaceFolder}/project",
                 "${workspaceFolder}/stdio/include"
