@@ -49,7 +49,8 @@ typedef struct _lcd_tft_config
 
     unsigned int forecolor;     /*前景色*/
     unsigned int backcolor;     /*背景色*/
-}lcd_tft_config_t
+}lcd_tft_config_t;
+extern lcd_tft_config_t lcd_tft_dev;
 /*屏幕ID*/
 #define ATK4342     0x4342      /*4.3寸480*272*/
 #define ATK4384     0x4384      /*4.3寸800*480*/
@@ -63,4 +64,8 @@ void lcd_gpio_init(void);
 void lcd_reset(void);
 void lcd_noreset(void);
 void lcd_enable(void);
+void lcd_clock_init(unsigned char loopDiv, unsigned char preDiv, unsigned char backDiv );
+inline void lcd_draw_point(unsigned short x, unsigned short y, unsigned int color);
+inline unsigned int lcd_read_point(unsigned short x, unsigned short y);
+void lcd_clear(unsigned int color);
 #endif

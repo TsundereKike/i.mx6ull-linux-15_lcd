@@ -11,7 +11,7 @@
 #include "stdio.h"
 #include "bsp_lcd.h"
 static unsigned char led_state = OFF;
-unsigned int a,b;
+unsigned int color;
 int main(void)
 {
     int_init();
@@ -25,6 +25,22 @@ int main(void)
     exti_init();
     epit1_init(0,66000000/100);/*初始化定时器1,1分频66MHz,定时时间为10ms,用于按键消抖*/
     lcd_init();
+    lcd_draw_point(0,0,LCD_RED);/*左上方*/
+    lcd_draw_point(lcd_tft_dev.width-1,0,LCD_RED);/*右上方*/
+    lcd_draw_point(0,lcd_tft_dev.height-1,LCD_RED);/*左下方*/
+    lcd_draw_point(lcd_tft_dev.width-1,lcd_tft_dev.height-1,LCD_RED);/*右下方*/
+    color = lcd_read_point(0,0);
+    printf("左上方 = %#x\r\n",color);
+
+    color = lcd_read_point(lcd_tft_dev.width-1,0);
+    printf("右上方 = %#x\r\n",color);
+
+    color = lcd_read_point(0,lcd_tft_dev.height-1);
+    printf("左下方 = %#x\r\n",color);
+
+    color = lcd_read_point(lcd_tft_dev.width-1,lcd_tft_dev.height-1);
+    printf("右下方 = %#x\r\n",color);
+    
     while(1)
     {
         led_state = !led_state;

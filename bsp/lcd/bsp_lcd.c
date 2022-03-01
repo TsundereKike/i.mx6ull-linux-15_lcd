@@ -27,12 +27,106 @@ void lcd_init(void)
         lcd_tft_dev.hspw = 0;
         lcd_tft_dev.hbpd = 40;
         lcd_tft_dev.hfpd = 5;
+        lcd_clock_init(27,8,8);/*设置10.1MHz的LCD时钟*/
+    }
+    else if(lcd_id == ATK4384 )
+    {
+        lcd_tft_dev.height = 480;
+        lcd_tft_dev.width = 800;
+        lcd_tft_dev.vspw = 3;
+        lcd_tft_dev.vbpd = 32;
+        lcd_tft_dev.vfpd = 13;
+        lcd_tft_dev.hspw = 48;
+        lcd_tft_dev.hbpd = 88;
+        lcd_tft_dev.hfpd = 40;
+        lcd_clock_init(42,4,8);/*设置31.5MHz的LCD时钟*/
+    }
+    else if(lcd_id == ATK7084)
+    {
+        lcd_tft_dev.height = 480;
+        lcd_tft_dev.width = 800;
+        lcd_tft_dev.vspw = 1;
+        lcd_tft_dev.vbpd = 23;
+        lcd_tft_dev.vfpd = 22;
+        lcd_tft_dev.hspw = 1;
+        lcd_tft_dev.hbpd = 46;
+        lcd_tft_dev.hfpd = 210;
+        lcd_clock_init(30,3,7);/*设置34.2MHz的LCD时钟*/
+    }
+    else if(lcd_id == ATK7016)
+    {
+        lcd_tft_dev.height = 600;
+        lcd_tft_dev.width = 1024;
+        lcd_tft_dev.vspw = 3;
+        lcd_tft_dev.vbpd = 20;
+        lcd_tft_dev.vfpd = 12;
+        lcd_tft_dev.hspw = 20;
+        lcd_tft_dev.hbpd = 140;
+        lcd_tft_dev.hfpd = 160;
+        lcd_clock_init(32,3,5);/*设置51.2MHz的LCD时钟*/
     }
     lcd_tft_dev.pixsize = 4;    /*每个像素4个字节*/
     lcd_tft_dev.framebuffer = LCD_FRAMEBUFF_ADDR;
     lcd_tft_dev.forecolor = LCD_BLACK;  /*前景色为黑色*/
     lcd_tft_dev.backcolor = LCD_WHITE;  /*背景色为白色*/
     
+    /*配置LCDIF控制器接口*/
+    LCDIF->CTRL = 0;
+    LCDIF->CTRL |= (1<<5) | (3<<8) | (3<<10) | (1<<17) | (1<<19);
+
+    LCDIF->CTRL1 = 0;
+    LCDIF->CTRL1 |= (7<<16);
+
+    LCDIF->TRANSFER_COUNT = 0;
+    LCDIF->TRANSFER_COUNT = (lcd_tft_dev.height<<16) | (lcd_tft_dev.width<<0);
+
+    LCDIF->VDCTRL0 = 0;
+    LCDIF->VDCTRL0 = (lcd_tft_dev.vspw<<0) | (1<<20)
+                     | (1<<21) | (1<<24) | (0<<25) | (0<<26) 
+                     | (0<<27) | (1<<28) | (0<<29);
+
+    LCDIF->VDCTRL1 = lcd_tft_dev.vspw + lcd_tft_dev.height + lcd_tft_dev.vfpd 
+                     + lcd_tft_dev.vbpd;
+    
+    LCDIF->VDCTRL2 = (lcd_tft_dev.hspw + lcd_tft_dev.width + lcd_tft_dev.hbpd 
+                     + lcd_tft_dev.hfpd) | (lcd_tft_dev.hspw<<18);
+
+    LCDIF->VDCTRL3 = (lcd_tft_dev.vspw + lcd_tft_dev.vbpd) 
+                     | (lcd_tft_dev.hspw + lcd_tft_dev.hbpd)<<16;
+            
+    LCDIF->VDCTRL4 = (lcd_tft_dev.width) | (1<<18);
+
+    LCDIF->CUR_BUF = (unsigned int)lcd_tft_dev.framebuffer;
+    LCDIF->NEXT_BUF = (unsigned int)lcd_tft_dev.framebuffer;
+
+    lcd_enable();
+    lcd_clear(LCD_WHITE);
+}
+/*LCD时钟初始化
+ *loopDiv: 设置DIV_SELECT,范围27～54
+ *preDiv:  设置为1～8
+ *backDiv: 可选范围1～8
+ *LCD_CLK = 24 * loopDiv / preDiv / backDiv
+ */
+void lcd_clock_init(unsigned char loopDiv, unsigned char preDiv, unsigned char backDiv )
+{
+    CCM_ANALOG->PLL_VIDEO_NUM = 0;
+    CCM_ANALOG->PLL_VIDEO_DENOM = 0;
+    CCM_ANALOG->PLL_VIDEO = (loopDiv<<0) | (2<<19) | (1<<13);
+    CCM_ANALOG->MISC2 &= ~(3<<30);
+
+    CCM->CSCDR2 &= ~(7<<15);
+    CCM->CSCDR2 |= (2<<15);
+
+    CCM->CSCDR2 &= ~(7<<12);
+    CCM->CSCDR2 |= (preDiv-1)<<12;
+
+    CCM->CBCMR &= ~(7<<23);
+    CCM->CBCMR |= (backDiv-1)<<23;
+
+    CCM->CSCDR2 &= ~(7<<9);
+    CCM->CSCDR2 |= (0<<9);
+
 }
 /*复位LCD控制器*/
 void lcd_reset(void)
@@ -179,4 +273,32 @@ void lcd_gpio_init(void)
     lcd_bl_config.outputLogic = 1;
     gpio_init(GPIO1,8,&lcd_bl_config);
 
+}
+/*画点函数*/
+inline void lcd_draw_point(unsigned short x, unsigned short y, unsigned int color)
+{
+    *(unsigned int *)((unsigned int)lcd_tft_dev.framebuffer 
+                                    + lcd_tft_dev.pixsize*(lcd_tft_dev.width*y+x)) = color;
+
+}
+/*读点函数*/
+inline unsigned int lcd_read_point(unsigned short x, unsigned short y)
+{
+    return *(unsigned int *)((unsigned int)lcd_tft_dev.framebuffer 
+                                    + lcd_tft_dev.pixsize*(lcd_tft_dev.width*y+x));
+}
+/*清屏函数*/
+void lcd_clear(unsigned int color)
+{
+    unsigned int num;
+    unsigned int i = 0;
+
+    unsigned int *start_addr = (unsigned int *)lcd_tft_dev.framebuffer;
+
+    num = lcd_tft_dev.height * lcd_tft_dev.width;
+
+    for(i=0;i<num;i++)
+    {
+        start_addr[i] = color;
+    }
 }
