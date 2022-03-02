@@ -68,4 +68,6 @@ void lcd_clock_init(unsigned char loopDiv, unsigned char preDiv, unsigned char b
 inline void lcd_draw_point(unsigned short x, unsigned short y, unsigned int color);
 inline unsigned int lcd_read_point(unsigned short x, unsigned short y);
 void lcd_clear(unsigned int color);
+void lcd_fill(unsigned    short x0, unsigned short y0, 
+                 unsigned short x1, unsigned short y1, unsigned int color);
 #endif

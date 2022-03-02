@@ -6,7 +6,8 @@
 	],
 	"settings": {
 		"files.associations": {
-			"bsp_lcd.h": "c"
+			"bsp_lcd.h": "c",
+			"bsp_lcdapi.h": "c"
 		}
 	}
 }

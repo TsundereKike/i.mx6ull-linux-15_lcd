@@ -21,10 +21,10 @@ void lcd_init(void)
     {
         lcd_tft_dev.height = 272;
         lcd_tft_dev.width = 480;
-        lcd_tft_dev.vspw = 0;
+        lcd_tft_dev.vspw = 1;
         lcd_tft_dev.vbpd = 8;
         lcd_tft_dev.vfpd = 8;
-        lcd_tft_dev.hspw = 0;
+        lcd_tft_dev.hspw = 1;
         lcd_tft_dev.hbpd = 40;
         lcd_tft_dev.hfpd = 5;
         lcd_clock_init(27,8,8);/*设置10.1MHz的LCD时钟*/
@@ -302,3 +302,29 @@ void lcd_clear(unsigned int color)
         start_addr[i] = color;
     }
 }
+/*
+ * @description		: 以指定的颜色填充一块矩形
+ * @param - x0		: 矩形起始点坐标X轴
+ * @param - y0		: 矩形起始点坐标Y轴
+ * @param - x1		: 矩形终止点坐标X轴
+ * @param - y1		: 矩形终止点坐标Y轴
+ * @param - color	: 要填充的颜色
+ * @return 			: 读取到的指定点的颜色值
+ */
+void lcd_fill(unsigned    short x0, unsigned short y0, 
+                 unsigned short x1, unsigned short y1, unsigned int color)
+{ 
+    unsigned short x, y;
+
+	if(x0 < 0) x0 = 0;
+	if(y0 < 0) y0 = 0;
+	if(x1 >= lcd_tft_dev.width) x1 = lcd_tft_dev.width - 1;
+	if(y1 >= lcd_tft_dev.height) y1 = lcd_tft_dev.height - 1;
+	
+    for(y = y0; y <= y1; y++)
+    {
+        for(x = x0; x <= x1; x++)
+			lcd_draw_point(x, y, color);
+    }
+}
+
